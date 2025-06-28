@@ -40,6 +40,7 @@ function App() {
         projectsList: [
           ...currentState.projectsList,
           {
+            id: Date.now(),
             title: enteredTitle,
             description: enteredDescription,
             dueDate: enteredDueDate,
@@ -63,6 +64,7 @@ function App() {
     const index = (projectsState.projectsList).findIndex(projects => projects.title === projectsState.selectProject);
     const projectToAddTask = projectsState.projectsList[index];
     projectsState.projectsList[index] = {
+      id: projectToAddTask.id,
       title: projectToAddTask.title,
       description: projectToAddTask.description,
       dueDate: projectToAddTask.dueDate,
@@ -79,12 +81,44 @@ function App() {
     });
   }
 
+  function handleRemoveTask(taskName) {
+    const index = (projectsState.projectsList).findIndex(projects => projects.title === projectsState.selectProject);
+    const projectToRemoveTask = projectsState.projectsList[index];
+    const updatedTasks = projectToRemoveTask.tasksList.filter((_, idx) => idx !== taskName);
+    projectsState.projectsList[index] = {
+      id: projectToRemoveTask.id,
+      title: projectToRemoveTask.title,
+      description: projectToRemoveTask.description,
+      dueDate: projectToRemoveTask.dueDate,
+      tasksList: [
+        ...updatedTasks
+      ]
+    }
+    setProjectsState(currentState => {
+      return {
+        selectProject: currentState.selectProject,
+        projectsList: currentState.projectsList
+      }
+    });
+  }
+
+  function handleDeleteProject(projectId) {
+    const updatedProjects = (projectsState.projectsList).filter((projectsInList) => projectsInList.id !== projectId);
+    setProjectsState(currentState => {
+      return {
+        selectProject: undefined,
+        projectsList: [...updatedProjects]
+      }
+    })
+  }
+
   if (projectsState.selectProject === undefined) {
     content = <SplashScreen onClickHandler={handleAddProject} />;
   } else if (projectsState.selectProject === null) {
     content = <NewProject cancelHandler={handleCancelButton} saveHandler={handleSaveButton} />;
   } else {
-    content = <Project contentObject={selectedProjectObject} addTaskHandler={handleAddTask} />;
+    content = <Project contentObject={selectedProjectObject} addTaskHandler={handleAddTask}
+      cancelTaskHandler={handleRemoveTask} deleteProjectHandler={handleDeleteProject} />;
   }
 
   return (

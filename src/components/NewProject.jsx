@@ -1,18 +1,57 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Input from "./Input.jsx";
 
 export default function NewProject({ cancelHandler, saveHandler }) {
     const title = useRef();
     const description = useRef();
     const dueDate = useRef();
-    let content;
+    const [isInvalid, setIsInvalid] = useState({
+        isTitleError: undefined,
+        isDescriptionError: undefined,
+        isDueDateError: undefined
+    });
 
     function validateSave() {
-        if (title.current.value && description.current.value && dueDate.current.title) {
-            return true;
+        const titleValue = title.current.value;
+        const descriptionValue = description.current.value;
+        const dueDateValue = dueDate.current.value;
+
+        const isTitleError = /^\s*$/.test(titleValue);
+        const isDescriptionError = /^\s*$/.test(descriptionValue);
+        const isDueDateError = /^\s*$/.test(dueDateValue);
+
+        setIsInvalid({
+            isTitleError,
+            isDescriptionError,
+            isDueDateError,
+        });
+
+        if (isTitleError || isDescriptionError || isDueDateError) {
+            return;
         }
-        content = <p>Fill all the fields!</p>
-        return false;
+
+        saveHandler(titleValue, descriptionValue, dueDateValue);
+    }
+
+    function handleChange(type) {
+        if (type === 'Title') {
+            setIsInvalid(curr => ({
+                ...curr,
+                isTitleError: false,
+            }));
+        }
+        if (type === 'Description') {
+            setIsInvalid(curr => ({
+                ...curr,
+                isDescriptionError: false,
+            }));
+        }
+        if (type === 'Due Date') {
+            setIsInvalid(curr => ({
+                ...curr,
+                isDueDateError: false,
+            }));
+        }
     }
 
     return <div className="w-[35rem] mt-16 ">
@@ -24,23 +63,16 @@ export default function NewProject({ cancelHandler, saveHandler }) {
             </li>
             <li>
                 <button className="bg-stone-800 text-stone-50 hover:bg-stone-950 px-6 py-1.5 rounded-md dark:bg-stone-500"
-                    onClick={() => {
-                        saveHandler(
-                            title.current.value,
-                            description.current.value,
-                            dueDate.current.value
-                        )
-                    }}
-                >
+                    onClick={validateSave}>
                     Save
                 </button>
             </li>
         </menu>
         <div>
-            <Input ref={title} title="Title" />
-            <Input ref={description} title="Description" isTextArea />
-            <Input ref={dueDate} title="Due Date" type="date" />
-            { }
+            <Input ref={title} title="Title" isError={isInvalid.isTitleError} onInputChange={handleChange} />
+            <Input ref={description} title="Description" isTextArea isError={isInvalid.isDescriptionError} onInputChange={handleChange} />
+            <Input ref={dueDate} title="Due Date" type="date" isError={isInvalid.isDueDateError} onInputChange={handleChange} />
+            {(isInvalid.isTitleError || isInvalid.isDescriptionError || isInvalid.isDueDateError) && <p>Invalid Input</p>}
         </div>
     </div>
 }
